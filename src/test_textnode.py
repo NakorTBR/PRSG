@@ -1,34 +1,65 @@
 import unittest
 
-from textnode import TextNode, TextType
+from textnode import TextNode, TextType, text_node_to_html_node
+from nodehandlers import split_nodes_delimiter
 
 
 class TestTextNode(unittest.TestCase):
     def test_eq(self):
-        print("\nTesting TextNode...")
-        node = TextNode("This is a text node", TextType.BOLD)
-        node2 = TextNode("This is a text node", TextType.BOLD)
+        print("\nTesting TextNode")
+        node = TextNode(text="This is a text node", text_type=TextType.BOLD)
+        node2 = TextNode(text="This is a text node", text_type=TextType.BOLD)
         self.assertEqual(node, node2)
-        node3 = TextNode("I wrote a test", TextType.ITALIC)
-        node4 = TextNode("I wrote a test", TextType.ITALIC)
+        node3 = TextNode(text="I wrote a test", text_type=TextType.ITALIC)
+        node4 = TextNode(text="I wrote a test", text_type=TextType.ITALIC)
         self.assertEqual(node3, node4)
-        node5 = TextNode("z", TextType.NORMAL)
-        node6 = TextNode("z", TextType.NORMAL)
+        node5 = TextNode(text="z", text_type=TextType.NORMAL)
+        node6 = TextNode(text="z", text_type=TextType.NORMAL)
         self.assertEqual(node5, node6)
 
-        edge1 = TextNode("A website", TextType.LINKS, None)
-        edge2 = TextNode("A website", TextType.LINKS, None)
+        edge1 = TextNode(text="A website", text_type=TextType.LINK, url=None)
+        edge2 = TextNode(text="A website", text_type=TextType.LINK, url=None)
         self.assertEqual(edge1, edge2)
-        edge3 = TextNode("Is it different?", TextType.LINKS, None)
-        edge4 = TextNode("Is it different?", TextType.CODE, None)
+        edge3 = TextNode(text="Is it different?", text_type=TextType.LINK, url=None)
+        edge4 = TextNode(text="Is it different?", text_type=TextType.CODE, url=None)
         self.assertNotEqual(edge3, edge4)
-        edge5 = TextNode("I sit different?", TextType.TEXT)
-        edge6 = TextNode("Is it different?", TextType.TEXT)
+        edge5 = TextNode(text="I sit different?", text_type=TextType.TEXT)
+        edge6 = TextNode(text="Is it different?", text_type=TextType.TEXT)
         self.assertNotEqual(edge5, edge6)
-        
-        #wrench = TextNode("What?", TextType.TEXT, "http://www.eh.com")
-        #gear = TextNode("Are you deaf?", TextType.IMAGES, "What is a link?")
-        #self.assertEqual(wrench, gear, "Good, these should not actually assert OK")
+
+    def test_repr(self):
+        node = TextNode(text="This is a text node", text_type=TextType.TEXT, url="https://www.boot.dev")
+        self.assertEqual(
+            "TextNode(This is a text node, text, https://www.boot.dev)", repr(node)
+        )
+
+class TestTextNodeToHTMLNode(unittest.TestCase):
+    def test_text(self):
+        node = TextNode(text="Writing tests sucks.", text_type=TextType.TEXT)
+        html_node = text_node_to_html_node(node)
+        self.assertEqual(html_node.tag, None)
+        self.assertEqual(html_node.value, "Writing tests sucks.")
+
+    def test_image(self):
+        node = TextNode(text="A picture of something interesting.", text_type=TextType.IMAGE, url="https://www.boot.dev")
+        html_node = text_node_to_html_node(node)
+        self.assertEqual(html_node.tag, "img")
+        self.assertEqual(html_node.value, "")
+        self.assertEqual(
+            html_node.props,
+            {"src": "https://www.boot.dev", "alt": "A picture of something interesting."},
+        )
+
+    def test_bold(self):
+        node = TextNode(text="This is bold", text_type=TextType.BOLD)
+        html_node = text_node_to_html_node(node)
+        self.assertEqual(html_node.tag, "b")
+        self.assertEqual(html_node.value, "This is bold")
+
+    def test_temp_handler(self):
+        node = TextNode("This is text with **bold text** words", TextType.TEXT)
+        new_nodes = split_nodes_delimiter([node], "**", TextType.BOLD)
+        print(f"NEW NODES: {new_nodes}")
 
 
 if __name__ == "__main__":

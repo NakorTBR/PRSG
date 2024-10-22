@@ -5,7 +5,7 @@ from htmlnode import LeafNode, ParentNode, HTMLNode
 
 class TestHTMLNode(unittest.TestCase):
     def test_nodes_equal(self):
-        print("\nTesting HTML Node...")
+        print("\nTesting HTML Node")
         t1 = HTMLNode()
         t2 = HTMLNode()
         self.assertEqual(t1, t2)
@@ -26,22 +26,22 @@ class TestHTMLNode(unittest.TestCase):
         n6 = HTMLNode("end", "bye", ["boring", "test", "trill", "data"], {"monkey":"fun"})
         self.assertNotEqual(n5, n6)
 
-        print(n5.props_to_html())
-        print(n5)
+        # print(n5.props_to_html())
+        # print(n5)
 
     def test_leaf_nodes(self):
         leaf1 = LeafNode("just text").to_html()
-        print(leaf1)
+        # print(leaf1)
         self.assertEqual("just text", leaf1)
         leaf2 = LeafNode("Paragraph text", "p").to_html()
-        print(leaf2)
+        # print(leaf2)
         self.assertEqual("<p>Paragraph text</p>", leaf2)
         leaf3 = LeafNode("This is a link", "a", {"href":"https://boot.dev"}).to_html()
-        print(leaf3)
+        # print(leaf3)
         self.assertEqual('<a href="https://boot.dev">This is a link</a>', leaf3)
         leaf4 = LeafNode("Another...link...", "a", 
-                                  {"href":"whomstistesting.com?user=farkleton", "deer":"droppings"}).to_html()
-        print(leaf4)
+                                  {"href":"whomstistesting.com?user=farkleton"}).to_html()
+        # print(leaf4)
         self.assertEqual("<a href=\"whomstistesting.com?user=farkleton\">Another...link...</a>", leaf4)
 
     def test_basic_parent_nodes(self):
@@ -55,8 +55,8 @@ class TestHTMLNode(unittest.TestCase):
             ],
         )
 
-        print("NODE TO HTML")
-        print(node.to_html())
+        # print("NODE TO HTML")
+        # print(node.to_html())
         self.assertEqual(node.to_html(), "<p><b>Bold text</b>Normal text<i>italic text</i>Normal text</p>")
 
         node2 = ParentNode(
@@ -70,12 +70,12 @@ class TestHTMLNode(unittest.TestCase):
             ],
         )
 
-        print(node2.to_html())
+        # print(node2.to_html())
         self.assertEqual(
             "<p><b>Really important!</b>  Meh.  Not very important.<i>  This is important, but don't tell anyone!</i>  "
             "Again, who cares about normal text?<b>  In closing, HTML is boring.</b></p>", node2.to_html())
 
-        print("\n\n\n")
+        # print("\n\n\n")
     
     def test_to_html_no_children(self):
         node = LeafNode(tag="p", value="Hello, world!")

@@ -13,7 +13,7 @@ class HTMLNode():
             return ""
         retval = ""
         for key in self.props.keys():
-            retval += f" {key}={self.props[key]}"
+            retval += f" {key}=\"{self.props[key]}\""
         
         return retval
     
@@ -54,22 +54,7 @@ class LeafNode(HTMLNode):
         if self.tag == None or self.tag == "":
             return self.value
         
-        match (self.tag):
-            case "p":
-                return f"<p>{self.value}</p>"
-            case "a":
-                return f"<a href=\"{self.props['href']}\">{self.value}</a>"
-            case "i":
-                return f"<i>{self.value}</i>"
-            case "b":
-                return f"<b>{self.value}</b>"
-            case ("div"):
-                return f"<div>{self.value}</div>"
-            case ("span"):
-                return f"<span>{self.value}</span>"
-            
-            
-        raise ValueError("Unknown HTML tag.")
+        return f"<{self.tag}{self.props_to_html()}>{self.value}</{self.tag}>"
     
 class ParentNode(HTMLNode):
     def __init__(self, children: list, tag : str = None, props : dict = None):
