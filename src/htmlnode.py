@@ -41,23 +41,67 @@ class HTMLNode():
         
         return True
     
-    class LeafNode():
-        def __init__(self, value: str, tag: str = None, props: dict = None):
-            super().__init__()
-            self.value = value
-            self.tag = tag
-            self.props = props
+class LeafNode(HTMLNode):
+    def __init__(self, value: str, tag: str = None, props: dict = None):
+        super().__init__()
+        self.value = value
+        self.tag = tag
+        self.props = props
+    
+    def to_html(self):
+        if self.value == None or self.value == "":
+            raise ValueError("All leaf nodes must have a value.")
+        if self.tag == None or self.tag == "":
+            return self.value
         
-        def to_html(self):
-            if self.value == None or self.value == "":
-                raise ValueError("All leaf nodes must have a value.")
-            if self.tag == None or self.tag == "":
-                return self.value
+        match (self.tag):
+            case "p":
+                return f"<p>{self.value}</p>"
+            case "a":
+                return f"<a href=\"{self.props['href']}\">{self.value}</a>"
+            case "i":
+                return f"<i>{self.value}</i>"
+            case "b":
+                return f"<b>{self.value}</b>"
+            case ("div"):
+                return f"<div>{self.value}</div>"
+            case ("span"):
+                return f"<span>{self.value}</span>"
             
-            match (self.tag):
-                case "p":
-                    return f"<p>{self.value}</p>"
-                case "a":
-                    return f"<a href=\"{self.props['href']}\">{self.value}</a>"
-                
-            raise ValueError("Unknown HTML tag.")
+            
+        raise ValueError("Unknown HTML tag.")
+    
+class ParentNode(HTMLNode):
+    def __init__(self, children: list, tag : str = None, props : dict = None):
+        self.children = children
+        self.tag = tag
+        self.props = props
+    
+    def to_html(self):
+        if self.tag == None or self.tag == "":
+            raise ValueError("Parent node MUST have a tag.")
+        if not self.children:
+            raise ValueError("Parent node unable to parent without children.  Make it so.")
+        
+        retval = ""
+        # closing = ""
+
+        # match (self.tag):
+        #     case ("p"):
+        #         retval = "<p>"
+        #         closing = "</p>"
+        #     case ("div"):
+        #         retval = "<div>"
+        #         closing = "</div>"
+        #     case ("span"):
+        #         retval = "<span>"
+        #         closing = "</span>"
+        
+
+
+        # Call to_html() on every element and concatenate into a single string
+        for item in self.children:
+            retval += item.to_html()
+
+        # return retval + closing
+        return f"<{self.tag}{self.props_to_html()}>{retval}</{self.tag}>"
