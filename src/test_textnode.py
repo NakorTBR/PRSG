@@ -1,7 +1,7 @@
 import unittest
 
 from textnode import TextNode, TextType, text_node_to_html_node
-from nodehandlers import split_nodes_delimiter
+from nodehandlers import split_nodes_delimiter, extract_markdown_images, extract_markdown_links
 
 
 class TestTextNode(unittest.TestCase):
@@ -59,7 +59,19 @@ class TestTextNodeToHTMLNode(unittest.TestCase):
     def test_temp_handler(self):
         node = TextNode("This is text with **bold text** words", TextType.TEXT)
         new_nodes = split_nodes_delimiter([node], "**", TextType.BOLD)
-        print(f"NEW NODES: {new_nodes}")
+        # print(f"NEW NODES: {new_nodes}")
+
+    def test_extract_md_images(self):
+        test = extract_markdown_images(
+            "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)")
+        expected = [("rick roll", "https://i.imgur.com/aKaOqIh.gif"), ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg")]
+        self.assertEqual(test, expected)
+    
+    def test_extract_md_links(self):
+        test = extract_markdown_links(
+            "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)")
+        expected = [("to boot dev", "https://www.boot.dev"), ("to youtube", "https://www.youtube.com/@bootdotdev")]
+        self.assertEqual(test, expected)
 
 
 if __name__ == "__main__":
