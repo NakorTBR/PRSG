@@ -26,6 +26,22 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
         retval.extend(modified_nodes)
     return retval
 
+def text_node_to_html_node(text_node):
+    if text_node.text_type == TextType.TEXT.value:
+        return LeafNode(tag=None, value=text_node.text)
+    if text_node.text_type == TextType.BOLD.value:
+        return LeafNode(tag="b", value=text_node.text)
+    if text_node.text_type == TextType.ITALIC.value:
+        return LeafNode(tag="i", value=text_node.text)
+    if text_node.text_type == TextType.CODE.value:
+        return LeafNode(tag="code", value=text_node.text)
+    if text_node.text_type == TextType.LINK.value:
+        return LeafNode(tag="a", value=text_node.text, props={"href": text_node.url})
+    if text_node.text_type == TextType.IMAGE.value:
+        return LeafNode(tag="img", value="", props={"src": text_node.url, "alt": text_node.text})
+        
+    raise ValueError(f"Invalid text type: {text_node.text_type}")
+
 def extract_markdown_images(text):
     """Takes a markdown string and returns a list of tuples with an image URL and alt text.
 
