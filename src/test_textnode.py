@@ -1,7 +1,12 @@
 import unittest
 
-from textnode import TextNode, TextType, text_node_to_html_node
-from nodehandlers import split_nodes_delimiter, extract_markdown_images, extract_markdown_links
+from textnode import TextNode, TextType
+from nodehandlers import (
+    split_nodes_delimiter, 
+    extract_markdown_images, 
+    extract_markdown_links, 
+    text_node_to_html_node,
+    )
 
 
 class TestTextNode(unittest.TestCase):
@@ -30,7 +35,7 @@ class TestTextNode(unittest.TestCase):
     def test_repr(self):
         node = TextNode(text="This is a text node", text_type=TextType.TEXT, url="https://www.boot.dev")
         self.assertEqual(
-            "TextNode(This is a text node, text, https://www.boot.dev)", repr(node)
+            "TextNode(text=\"This is a text node\", type=text, url=https://www.boot.dev)", repr(node)
         )
 
 class TestTextNodeToHTMLNode(unittest.TestCase):

@@ -1,7 +1,13 @@
 import unittest
-from nodehandlers import split_nodes_delimiter, split_nodes_image, split_nodes_link
+from nodehandlers import (
+    split_nodes_delimiter, 
+    split_nodes_image, 
+    split_nodes_link, 
+    text_to_textnodes,
+    )
 
 from textnode import TextNode, TextType
+from print_colours import debug_colours as dc
 
 
 class TestSplitNodesDelimiter(unittest.TestCase):
@@ -220,6 +226,48 @@ class TestSplitNodes(unittest.TestCase):
             new_nodes,
         )
 
+class TestTextToTextNodes(unittest.TestCase):
+    def test_text_to_text_nodes_all(self):
+        new_nodes = text_to_textnodes("This is **bold text** with an *italic* word and a `code block` and an "
+                                  "![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)")
+        self.assertListEqual(
+            [
+                TextNode("This is ", TextType.TEXT),
+                TextNode("bold text", TextType.BOLD),
+                TextNode(" with an ", TextType.TEXT),
+                TextNode("italic", TextType.ITALIC),
+                TextNode(" word and a ", TextType.TEXT),
+                TextNode("code block", TextType.CODE),
+                TextNode(" and an ", TextType.TEXT),
+                TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+                TextNode(" and a ", TextType.TEXT),
+                TextNode("link", TextType.LINK, "https://boot.dev"),
+            ],
+            new_nodes
+        )
+
+    def test_text_to_text_nodes_all2(self):
+        new_nodes = text_to_textnodes("`int main()` provides a dumb **example** of a *code block* "
+                                  "![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+                                  " but 'code block?' does not.")
         
+        self.assertListEqual(
+            [
+                TextNode("int main()", TextType.CODE),
+                TextNode(" provides a dumb ", TextType.TEXT),
+                TextNode("example", TextType.BOLD),
+                TextNode(" of a ", TextType.TEXT),
+                TextNode("code block", TextType.ITALIC),
+                TextNode(" ", TextType.TEXT ),
+                TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+                TextNode(" and a ", TextType.TEXT),
+                TextNode("link", TextType.LINK, "https://boot.dev"),
+                TextNode(" but 'code block?' does not.", TextType.TEXT),
+            ],
+            new_nodes
+        )
+
+
+
 if __name__ == "__main__":
     unittest.main()

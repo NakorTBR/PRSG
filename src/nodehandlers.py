@@ -1,5 +1,7 @@
 from textnode import TextType, TextNode
 import re
+from htmlnode import LeafNode
+from print_colours import debug_colours as dc
 
 def extract_markdown_images(text):
     """Takes a markdown string and returns a list of tuples with an image URL and alt text.
@@ -59,10 +61,10 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
         A list of tuples.  Each tuple contains both a URL and the alt text for the link.
     """
     retval = []
-    # print(f"OLD: {old_nodes}")
 
     for node in old_nodes:
         if node.text_type != TextType.TEXT.value:
+            # print(f"{dc.fg.red}SKIPPING TEXT TYPE TEXTNODE{dc.reset}: {node}")
             retval.append(node)
             continue
 
@@ -72,6 +74,7 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
             raise ValueError("Bad markdown!  Element was not closed.")
         
         for i in range(len(lines)):
+            # print(f"Line: {dc.fg.lightcyan}{lines[i]}{dc.reset}")
             if lines[i] == "":
                 continue
             if i % 2 == 0:
@@ -96,10 +99,11 @@ def split_nodes_image(old_nodes):
         A list of TextNode objects.  Each node is either an image link or a basic text node.
     """
 
-    retval = []
+    retval = []    
 
     for node in old_nodes:
         if node.text_type != TextType.TEXT.value:
+            # print(f"SUS: {dc.fg.lightred}{node}{dc.reset}")
             retval.append(node)
             continue
 
@@ -108,6 +112,13 @@ def split_nodes_image(old_nodes):
         # After stripping a chunk off a string, store the remainder here.
         remainder = ""
         links_initial = extract_markdown_images(node.text)
+
+        # If no links were found then we just have a text node that 
+        # needs to be appended to the list.
+        if len(links_initial) == 0:
+            modified_nodes.append(node)
+            
+        
         for link in links_initial:
             image_alt = link[0]
             image_link = link[1]
@@ -118,13 +129,16 @@ def split_nodes_image(old_nodes):
                 lines = remainder.split(f"![{image_alt}]({image_link})", 1)
             if len(lines) > 1:
                 remainder = lines[1]
+
             modified_nodes.append(TextNode(text=lines[0], text_type=TextType.TEXT))
             modified_nodes.append(TextNode(text=link[0], text_type=TextType.IMAGE, url=link[1]))
         
         if remainder != "":
             modified_nodes.append(TextNode(text=remainder, text_type=TextType.TEXT))
         
+        
         retval.extend(modified_nodes)
+        # print(f"{dc.fg.orange}{retval}{dc.reset}")
     
     return retval
         
@@ -192,6 +206,31 @@ def text_node_to_html_node(text_node):
         
     raise ValueError(f"Invalid text type: {text_node.text_type}")
 
-# Adding a line and this comment so that I may do a test commit (testing formatting).
+def text_to_textnodes(text):
+    """Takes a string and converts it to TextNode objects.
+
+    Parameters
+    ----------
+    text : str
+        A string to be processed into relevant TextNode objects.
+    
+    Returns
+    -------
+    list[TextNode]
+        A list of TextNode objects.  Each node is properly split to the correct type 
+        based on the content of the string.
+
+    Note
+    ----
+    If there is a problem with this function then it happened in one of the called functions.  
+    That is really all this function does.
+    """
+    node_links_split = split_nodes_link([TextNode(text=text, text_type=TextType.TEXT)])
+    node_images_split = split_nodes_image(node_links_split)
+    node_bold_split = split_nodes_delimiter(node_images_split, "**", TextType.BOLD)
+    node_italic_split = split_nodes_delimiter(node_bold_split, "*", TextType.ITALIC)
+    node_code_block_final = split_nodes_delimiter(node_italic_split, "`", TextType.CODE)
+
+    return node_code_block_final
 
 
