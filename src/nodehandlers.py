@@ -3,6 +3,14 @@ import re
 from htmlnode import LeafNode
 from print_colours import debug_colours as dc
 
+
+block_type_paragraph = "paragraph"
+block_type_quote = "quote"
+block_type_code = "code"
+block_type_ulist = "unordered_list"
+block_type_olist = "ordered_list"
+block_type_heading = "heading"
+
 def extract_markdown_images(text):
     """Takes a markdown string and returns a list of tuples with an image URL and alt text.
 
@@ -234,3 +242,72 @@ def text_to_textnodes(text):
     return node_code_block_final
 
 
+def markdown_to_blocks(markdown: str):
+    """Takes a string and returns a list of block strings.  Blocks are logical groupings 
+    of MD formatted strings (paragraphs, lists, etc.).
+
+    Parameters
+    ----------
+    markdown : str
+        A MD formatted string to be processed into relevant block strings.
+    
+    Returns
+    -------
+    list[str]
+        A list of TextNode objects.  Each node is properly split to the correct type 
+        based on the content of the string.
+    """
+    split = markdown.split("\n\n")
+
+    split = [i for i in split if i]
+    blocks = []
+    for block in split:
+        block = block.strip()
+        blocks.append(block)
+
+    return blocks
+
+def block_to_block_type(block:str) -> str:
+    """Takes a block (string of MD formatted text representing a basic block) and 
+    returns a properly typed block.
+
+    Parameters
+    ----------
+    block : str
+        A string of MD formatted text representing a block.
+    
+    Returns
+    -------
+    str
+        A string representing the type of block that was found.
+    """
+
+    lines = block.split("\n")
+
+    if block.startswith(("# ", "## ", "### ", "#### ", "##### ", "###### ")):
+        return block_type_heading
+    if len(lines) > 1 and lines[0].startswith("```") and lines[-1].startswith("```"):
+        return block_type_code
+    if block.startswith(">"):
+        for line in lines:
+            if not line.startswith(">"):
+                return block_type_paragraph
+        return block_type_quote
+    if block.startswith("* "):
+        for line in lines:
+            if not line.startswith("* "):
+                return block_type_paragraph
+        return block_type_ulist
+    if block.startswith("- "):
+        for line in lines:
+            if not line.startswith("- "):
+                return block_type_paragraph
+        return block_type_ulist
+    if block.startswith("1. "):
+        i = 1
+        for line in lines:
+            if not line.startswith(f"{i}. "):
+                return block_type_paragraph
+            i += 1
+        return block_type_olist
+    return block_type_paragraph
