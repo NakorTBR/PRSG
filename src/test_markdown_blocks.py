@@ -120,8 +120,8 @@ This is the same paragraph on a new line
             "<i>italic</i> text and <code>code</code> here<br />This is the same paragraph on a "
             "new line<br /><ul><li>This is a list</li><li>with items</li></ul><ol><li>Different "
             "lists,</li><li>Might be ordered.</li><li>This one is.</li></ol></div>")
-
-
+        
+        
 
 if __name__ == "__main__":
     unittest.main()

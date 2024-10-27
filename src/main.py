@@ -1,8 +1,9 @@
-from textnode import *
+from io_handler import check_read_write_dirs, clean_public_directory, push_public
 
 def main():
-    test = TextNode("This is a text node!", TextNode.LINKS, "https://www.boot.dev")
-    print(test)
+    check_read_write_dirs()
+    clean_public_directory()
+    push_public()
 
 
 main()
