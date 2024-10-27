@@ -62,6 +62,9 @@ class ParentNode(HTMLNode):
         self.tag = tag
         self.props = props
     
+    def __repr__(self):
+        return f"ParentNode -> Tag: {self.tag}, Children: {self.children}, Props: {self.props}"
+    
     def to_html(self):
         if self.tag == None or self.tag == "":
             raise ValueError("Parent node MUST have a tag.")
@@ -69,24 +72,14 @@ class ParentNode(HTMLNode):
             raise ValueError("Parent node unable to parent without children.  Make it so.")
         
         retval = ""
-        # closing = ""
-
-        # match (self.tag):
-        #     case ("p"):
-        #         retval = "<p>"
-        #         closing = "</p>"
-        #     case ("div"):
-        #         retval = "<div>"
-        #         closing = "</div>"
-        #     case ("span"):
-        #         retval = "<span>"
-        #         closing = "</span>"
         
-
-
         # Call to_html() on every element and concatenate into a single string
+        # If it has already been converted to HTMLNode then just concatenate as is.
         for item in self.children:
-            retval += item.to_html()
+            if isinstance(item, HTMLNode):
+                retval += item.to_html()
+            else:
+                retval += item
 
         # return retval + closing
         return f"<{self.tag}{self.props_to_html()}>{retval}</{self.tag}>"

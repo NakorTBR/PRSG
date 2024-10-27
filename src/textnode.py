@@ -11,6 +11,10 @@ class TextType(Enum):
     CODE = "code"
     LINK = "link"
     IMAGE = "image"
+    ULIST = "ul"
+    OLIST = "ol"
+    LITEM = "li"
+    DIV = "div"
 
 
 class TextNode():

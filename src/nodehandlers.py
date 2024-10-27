@@ -1,6 +1,6 @@
 from textnode import TextType, TextNode
 import re
-from htmlnode import LeafNode
+from htmlnode import LeafNode, ParentNode
 from print_colours import debug_colours as dc
 
 
@@ -44,9 +44,12 @@ def extract_markdown_links(text):
         A list of tuples.  Each tuple contains both a URL and the alt text for the link.
     """
 
+
     # regular links
     reg = r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)"
+    # dc.d_print(f"TEXT: {text}", combo=dc.Colour.COMBO_OB)
     link_tuples = re.findall(reg, text)
+
     return link_tuples
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
@@ -178,7 +181,27 @@ def split_nodes_link(old_nodes):
         # After stripping a chunk off a string, store the remainder here.
         remainder = ""
         links_initial = extract_markdown_links(node.text)
+        if isinstance(links_initial, str):
+            dc.d_print("Link parsed into string?", dc.Colour.COMBO_LGrR)
+            old_nodes = [old_nodes]
+
+        # print(f"LINK COUNT: {len(links_initial)}")
+        # if len(links_initial) > 20:
+        #     print(f"Link sus: {links_initial}")
+
+        # If no links were found then we just have a text node that 
+        # needs to be appended to the list.
+        if len(links_initial) == 0:
+            modified_nodes.append(node)
+        
+        # dc.d_print(f"Links:\n{links_initial}", dc.Colour.COMBO_GB)
+
         for link in links_initial:
+            # try:
+            #     print(f"{link[0]=}{link[1]=}")
+            # except:
+            #     dc.d_print("Error: Link data bad", dc.Colour.COMBO_LGrR)
+                
             found_alt = link[0]
             found_link = link[1]
             lines = ""
@@ -211,8 +234,14 @@ def text_node_to_html_node(text_node):
         return LeafNode(tag="a", value=text_node.text, props={"href": text_node.url})
     if text_node.text_type == TextType.IMAGE.value:
         return LeafNode(tag="img", value="", props={"src": text_node.url, "alt": text_node.text})
+    if text_node.text_type == TextType.ULIST.value:
+        return LeafNode(tag="li", value=text_node.text)
+    if text_node.text_type == TextType.OLIST.value:
+        return LeafNode(tag="li", value=text_node.text)
+    if text_node.text_type == TextType.LITEM.value:
+        return LeafNode(tag="li", value=text_node.text)
         
-    raise ValueError(f"Invalid text type: {text_node.text_type}")
+    raise ValueError(f"Invalid text type: {text_node.text_type=}")
 
 def text_to_textnodes(text):
     """Takes a string and converts it to TextNode objects.
@@ -220,7 +249,10 @@ def text_to_textnodes(text):
     Parameters
     ----------
     text : str
-        A string to be processed into relevant TextNode objects.
+        A list of strings to be processed into relevant TextNode objects.
+    split : bool
+        If you are passing in a string that is a chunk of MD text that still needs 
+        to be split, pass True for the split variable.
     
     Returns
     -------
@@ -233,11 +265,18 @@ def text_to_textnodes(text):
     If there is a problem with this function then it happened in one of the called functions.  
     That is really all this function does.
     """
+
+
+    # dc.d_print(text, combo=dc.Colour.COMBO_GB)
     node_links_split = split_nodes_link([TextNode(text=text, text_type=TextType.TEXT)])
+    # dc.d_print(node_links_split, combo=dc.Colour.COMBO_GB)
     node_images_split = split_nodes_image(node_links_split)
     node_bold_split = split_nodes_delimiter(node_images_split, "**", TextType.BOLD)
     node_italic_split = split_nodes_delimiter(node_bold_split, "*", TextType.ITALIC)
     node_code_block_final = split_nodes_delimiter(node_italic_split, "`", TextType.CODE)
+
+    # for node in node_code_block_final:
+    #     print(f"\n{node}")
 
     return node_code_block_final
 
@@ -259,11 +298,24 @@ def markdown_to_blocks(markdown: str):
     """
     split = markdown.split("\n\n")
 
-    split = [i for i in split if i]
+    # split = [i for i in split if i]
     blocks = []
-    for block in split:
-        block = block.strip()
-        blocks.append(block)
+    # for item in split:
+    #     item.replace("\n", "<br />")
+    # for block in split:
+    #     block = block.strip()
+    #     if block == "":
+    #         block = "<br />"
+    #     blocks.append(block)
+    for i in range(len(split)):
+        block = split[i].strip()
+        block = block.replace("\n", "<br />")
+        if block == "":
+            blocks[-1] += "<br />"
+            # print("Adding BR")
+        else:
+            blocks.append(block + "<br />")
+    # print(f"BLOCKS IN MTB:\n{blocks}\n")
 
     return blocks
 
@@ -311,3 +363,95 @@ def block_to_block_type(block:str) -> str:
             i += 1
         return block_type_olist
     return block_type_paragraph
+
+def __strip_ulist(block):
+    """Takes a block string and breaks it down, stripping the MD UL formatting.
+    """
+    lmd = "* "
+    # print(f"BLOCK TEST:\n {block}")
+    blines = block.split("<br />")
+    glines = []
+    for l in blines:
+        if l:
+            glines.append(l.lstrip(lmd))
+    # print(f"BLOCK TEST POST: {glines}")
+
+    return glines
+
+def __strip_olist(block):
+    """Takes a block string and breaks it down, stripping the MD OL formatting.
+    """
+    lmd = "* "
+    # print(f"BLOCK TEST:\n {block}")
+    blines = block.split("<br />")
+    glines = []
+    for l in blines:
+        pattern = r"^\d+\.\s+"
+        stripped_out = re.sub(pattern=pattern, repl='', string=l,  count=1)
+        # print(stripped_out)
+        if stripped_out:
+            glines.append(stripped_out)
+    # print(f"BLOCK TEST POST: {glines}")
+
+    return glines
+
+def text_to_list_item_text_node(text):
+    """Converts a text string to a TextNode with type LITEM.  Regardless of being submitted 
+      as either ULIST or OLIST, it will return LITEM TextNodes.  Does not check text.
+    """
+    return TextNode(text=text, text_type=TextType.LITEM)
+
+
+def markdown_to_html_node(markdown):
+    blocks = markdown_to_blocks(markdown=markdown)
+    # print(f"BLOCKS DISPLAY:\n{blocks}")
+    nodes = []
+
+    for block in blocks:
+        block_type = block_to_block_type(block)
+        # dc.d_print(f"BLOCK({block_type}):\n{block}", combo=dc.Colour.COMBO_PiB)
+
+        if block_type != block_type_olist and block_type != block_type_ulist:
+            new_nodes = text_to_textnodes(block)
+            new_html_nodes = []
+            for item in new_nodes:
+                new_html_nodes.append(text_node_to_html_node(item))
+            # dc.d_print(f"Non-list items:\n{new_html_nodes}", dc.Colour.COMBO_OB)
+            nodes.extend(new_html_nodes)
+        elif block_type == block_type_ulist:
+            # print(f"SPAM: {block}")
+            ulist_lines =__strip_ulist(block)
+            new_list_nodes = []
+            for item in ulist_lines:
+                new_node = text_to_list_item_text_node(item)
+                # new_list_nodes.append(new_node)
+                new_list_nodes.append(text_node_to_html_node(new_node))
+            # dc.d_print(f"ULIST ITEMS: {new_list_nodes}", combo=dc.Colour.COMBO_NOTICEMESENPAI)
+
+            # At this point TextNodes are LITEM and not ULIST.  Use ULIST enum to know how to parent.
+            parent = ParentNode(children=new_list_nodes, tag=TextType.ULIST.value)
+            html_parent = parent.to_html()
+            # print(f"Parent is as follows:\n{html_parent}")
+            nodes.append(html_parent)
+        elif block_type == block_type_olist:
+            olist_lines =__strip_olist(block)
+            new_list_nodes = []
+            for item in olist_lines:
+                new_node = text_to_list_item_text_node(item)
+                new_list_nodes.append(text_node_to_html_node(new_node))
+            # dc.d_print(f"OLIST ITEMS: {new_list_nodes}", combo=dc.Colour.COMBO_NOTICEMESENPAI)
+
+            # At this point TextNodes are LITEM and not OLIST.  Use OLIST enum to know how to parent.
+            parent = ParentNode(children=new_list_nodes, tag=TextType.OLIST.value)
+            html_parent = parent.to_html()
+            # print(f"Parent is as follows:\n{html_parent}")
+            nodes.append(html_parent)
+    
+    master_parent = ParentNode(children=nodes, tag=TextType.DIV.value)
+    return master_parent.to_html()
+
+
+
+    
+    
+        
