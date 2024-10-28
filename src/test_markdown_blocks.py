@@ -13,6 +13,10 @@ from nodehandlers import (
     block_type_ulist,
 )
 
+from io_handler import get_content_path, get_static_path, get_public_path, get_template_path
+
+from generator import generate_page
+
 from io_handler import get_file_contents
 
 class TestMarkdownToBlocks(unittest.TestCase):
@@ -186,6 +190,10 @@ this is paragraph text
         result = extract_title("# Who shot first?\nYou did.  Stop trying to blame Han.\nJerk.")
         self.assertEqual(result, "Who shot first?")
 
+    def test_generator(self):
+        content = get_content_path() / "index.md"
+        dest = get_static_path() / "index.html"
+        generate_page(from_path=content, dest_path=dest, template_path=get_template_path())
 
 if __name__ == "__main__":
     unittest.main()

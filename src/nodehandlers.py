@@ -499,6 +499,20 @@ def extract_title(markdown):
     
     raise Exception("No h1 header found.  Bad markdown.")
 
+def strip_title(markdown):
+    # print(markdown)
+    lines = markdown.split("\n")
+    cleaned_lines = []
+
+    for line in lines:
+        if line.startswith("# "):
+            continue
+
+        cleaned_lines.append(line)
+    
+    retval = "\n".join(cleaned_lines)
+    return retval
+
 
 
     

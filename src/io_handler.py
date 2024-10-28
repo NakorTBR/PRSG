@@ -3,27 +3,31 @@ from pathlib import Path
 import shutil
 
 __public_path = Path().cwd() / "public/"
+def get_public_path():
+    return __public_path
 __static_path = Path().cwd() / "static/"
+def get_static_path():
+    return __static_path
 __content_path = Path().cwd() / "content/"
+def get_content_path():
+    return __content_path
+__template_path = Path().cwd() / "template.html"
+def get_template_path():
+    return __template_path
 
-def check_read_write_dirs() -> bool:
-    """Checks the public and static directories to ensure they are present.
-    Standard practice should be to immediately create the directories if they
-    are not present and then run this check again.  If it fails after that, 
-    we have a serious problem.
+def check_read_directories() -> bool:
+    """Checks the static directory to ensure it is present.
 
     Returns
     -------
     bool
         Returns true if both directories are present, and false if not.
     """
-    # __public_path = Path.cwd() / "public/"
-    # __static_path = Path.cwd() / "static/"
 
-    pub_dir_exists = os.path.exists(__public_path)
+    content_dir_exists = os.path.exists(__content_path)
     stat_dir_exists = os.path.exists(__static_path)
 
-    if not pub_dir_exists:
+    if not content_dir_exists:
         return False
     if not stat_dir_exists:
         return False
@@ -82,12 +86,12 @@ def push_public(files=None, path=None):
                 print("Folder already exists.")
             push_public(get_all_files_for_given_path(new_path), new_folder)
 
-def get_file_contents(file_name: str) -> str:
-    file_path = __content_path / file_name
+def get_file_contents(path: Path) -> str:
+    # file_path = __content_path / file_name
     contents = ""
 
     try:
-        contents = file_path.read_text()
+        contents = path.read_text()
     except FileNotFoundError:
         print("No such thing.")
 
