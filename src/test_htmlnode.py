@@ -5,7 +5,7 @@ from htmlnode import LeafNode, ParentNode, HTMLNode
 
 class TestHTMLNode(unittest.TestCase):
     def test_nodes_equal(self):
-        print("\nTesting HTML Node")
+        # print("\nTesting HTML Node")
         t1 = HTMLNode()
         t2 = HTMLNode()
         self.assertEqual(t1, t2)

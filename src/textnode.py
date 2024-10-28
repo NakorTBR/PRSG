@@ -15,6 +15,7 @@ class TextType(Enum):
     OLIST = "ol"
     LITEM = "li"
     DIV = "div"
+    QUOTE = "blockquote"
 
 
 class TextNode():

@@ -11,7 +11,7 @@ from nodehandlers import (
 
 class TestTextNode(unittest.TestCase):
     def test_eq(self):
-        print("\nTesting TextNode")
+        # print("\nTesting TextNode")
         node = TextNode(text="This is a text node", text_type=TextType.BOLD)
         node2 = TextNode(text="This is a text node", text_type=TextType.BOLD)
         self.assertEqual(node, node2)

@@ -86,7 +86,7 @@ class TestMarkdownBlockTypes(unittest.TestCase):
     def test_block_to_block_types(self):
         block = "# Awesome header"
         self.assertEqual(block_to_block_type(block), block_type_heading)
-        block = "```\nint main()\n```"
+        block = "```<br />int main()<br />```<br />"
         self.assertEqual(block_to_block_type(block), block_type_code)
         block = "> Something quotable\n> continued here"
         self.assertEqual(block_to_block_type(block), block_type_quote)
@@ -122,6 +122,52 @@ This is the same paragraph on a new line
             "lists,</li><li>Might be ordered.</li><li>This one is.</li></ol></div>")
         
         
+class TestMarkdownToHTML(unittest.TestCase):
+    def test_headings(self):
+        md = """
+# this is an h1
+
+this is paragraph text
+
+## this is an h2
+"""
+
+        node = markdown_to_html_node(md)
+        self.assertEqual(
+            node,
+            "<div><h1>this is an h1<br /></h1><p>this is paragraph text</p><h2>this is an h2<br /></h2></div>",
+        )
+
+    def test_blockquote(self):
+        md = """
+> This is a
+> blockquote block
+
+this is paragraph text
+
+"""
+
+        node = markdown_to_html_node(md)
+        self.assertEqual(
+            node,
+            "<div><blockquote>This is a blockquote block</blockquote><br /><p>this is paragraph text</p></div>",
+        )
+
+    def test_codeblock(self):
+        md = """
+```
+This is a code block
+```
+
+this is paragraph text
+
+"""
+
+        node = markdown_to_html_node(md)
+        self.assertEqual(
+            node,
+            "<div><pre><code><br />This is a code block<br /></code></pre><p>this is paragraph text</p></div>",
+        )
 
 if __name__ == "__main__":
     unittest.main()

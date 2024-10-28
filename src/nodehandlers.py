@@ -5,7 +5,7 @@ from print_colours import debug_colours as dc
 
 
 block_type_paragraph = "paragraph"
-block_type_quote = "quote"
+block_type_quote = "blockquote"
 block_type_code = "code"
 block_type_ulist = "unordered_list"
 block_type_olist = "ordered_list"
@@ -47,7 +47,6 @@ def extract_markdown_links(text):
 
     # regular links
     reg = r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)"
-    # dc.d_print(f"TEXT: {text}", combo=dc.Colour.COMBO_OB)
     link_tuples = re.findall(reg, text)
 
     return link_tuples
@@ -75,7 +74,6 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
 
     for node in old_nodes:
         if node.text_type != TextType.TEXT.value:
-            # print(f"{dc.fg.red}SKIPPING TEXT TYPE TEXTNODE{dc.reset}: {node}")
             retval.append(node)
             continue
 
@@ -85,7 +83,6 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
             raise ValueError("Bad markdown!  Element was not closed.")
         
         for i in range(len(lines)):
-            # print(f"Line: {dc.fg.lightcyan}{lines[i]}{dc.reset}")
             if lines[i] == "":
                 continue
             if i % 2 == 0:
@@ -114,7 +111,6 @@ def split_nodes_image(old_nodes):
 
     for node in old_nodes:
         if node.text_type != TextType.TEXT.value:
-            # print(f"SUS: {dc.fg.lightred}{node}{dc.reset}")
             retval.append(node)
             continue
 
@@ -149,7 +145,6 @@ def split_nodes_image(old_nodes):
         
         
         retval.extend(modified_nodes)
-        # print(f"{dc.fg.orange}{retval}{dc.reset}")
     
     return retval
         
@@ -185,23 +180,12 @@ def split_nodes_link(old_nodes):
             dc.d_print("Link parsed into string?", dc.Colour.COMBO_LGrR)
             old_nodes = [old_nodes]
 
-        # print(f"LINK COUNT: {len(links_initial)}")
-        # if len(links_initial) > 20:
-        #     print(f"Link sus: {links_initial}")
-
         # If no links were found then we just have a text node that 
         # needs to be appended to the list.
         if len(links_initial) == 0:
             modified_nodes.append(node)
         
-        # dc.d_print(f"Links:\n{links_initial}", dc.Colour.COMBO_GB)
-
         for link in links_initial:
-            # try:
-            #     print(f"{link[0]=}{link[1]=}")
-            # except:
-            #     dc.d_print("Error: Link data bad", dc.Colour.COMBO_LGrR)
-                
             found_alt = link[0]
             found_link = link[1]
             lines = ""
@@ -240,6 +224,8 @@ def text_node_to_html_node(text_node):
         return LeafNode(tag="li", value=text_node.text)
     if text_node.text_type == TextType.LITEM.value:
         return LeafNode(tag="li", value=text_node.text)
+    if text_node.text_type == TextType.QUOTE.value:
+        return LeafNode(tag="blockquote", value=text_node.text)
         
     raise ValueError(f"Invalid text type: {text_node.text_type=}")
 
@@ -267,16 +253,11 @@ def text_to_textnodes(text):
     """
 
 
-    # dc.d_print(text, combo=dc.Colour.COMBO_GB)
     node_links_split = split_nodes_link([TextNode(text=text, text_type=TextType.TEXT)])
-    # dc.d_print(node_links_split, combo=dc.Colour.COMBO_GB)
     node_images_split = split_nodes_image(node_links_split)
     node_bold_split = split_nodes_delimiter(node_images_split, "**", TextType.BOLD)
     node_italic_split = split_nodes_delimiter(node_bold_split, "*", TextType.ITALIC)
     node_code_block_final = split_nodes_delimiter(node_italic_split, "`", TextType.CODE)
-
-    # for node in node_code_block_final:
-    #     print(f"\n{node}")
 
     return node_code_block_final
 
@@ -300,22 +281,13 @@ def markdown_to_blocks(markdown: str):
 
     # split = [i for i in split if i]
     blocks = []
-    # for item in split:
-    #     item.replace("\n", "<br />")
-    # for block in split:
-    #     block = block.strip()
-    #     if block == "":
-    #         block = "<br />"
-    #     blocks.append(block)
     for i in range(len(split)):
         block = split[i].strip()
         block = block.replace("\n", "<br />")
         if block == "":
             blocks[-1] += "<br />"
-            # print("Adding BR")
         else:
             blocks.append(block + "<br />")
-    # print(f"BLOCKS IN MTB:\n{blocks}\n")
 
     return blocks
 
@@ -334,7 +306,11 @@ def block_to_block_type(block:str) -> str:
         A string representing the type of block that was found.
     """
 
-    lines = block.split("\n")
+    dirty_lines = block.split("<br />")
+    lines = []
+    for l in dirty_lines:
+        if l:
+            lines.append(l)
 
     if block.startswith(("# ", "## ", "### ", "#### ", "##### ", "###### ")):
         return block_type_heading
@@ -368,13 +344,11 @@ def __strip_ulist(block):
     """Takes a block string and breaks it down, stripping the MD UL formatting.
     """
     lmd = "* "
-    # print(f"BLOCK TEST:\n {block}")
     blines = block.split("<br />")
     glines = []
     for l in blines:
         if l:
             glines.append(l.lstrip(lmd))
-    # print(f"BLOCK TEST POST: {glines}")
 
     return glines
 
@@ -382,16 +356,13 @@ def __strip_olist(block):
     """Takes a block string and breaks it down, stripping the MD OL formatting.
     """
     lmd = "* "
-    # print(f"BLOCK TEST:\n {block}")
     blines = block.split("<br />")
     glines = []
     for l in blines:
         pattern = r"^\d+\.\s+"
         stripped_out = re.sub(pattern=pattern, repl='', string=l,  count=1)
-        # print(stripped_out)
         if stripped_out:
             glines.append(stripped_out)
-    # print(f"BLOCK TEST POST: {glines}")
 
     return glines
 
@@ -401,37 +372,97 @@ def text_to_list_item_text_node(text):
     """
     return TextNode(text=text, text_type=TextType.LITEM)
 
+def text_to_children(text):
+    text_nodes = text_to_textnodes(text)
+    children = []
+    for text_node in text_nodes:
+        html_node = text_node_to_html_node(text_node)
+        children.append(html_node)
+    return children
+
+def quote_to_html_node_parent(block):
+    lines = block.split("<br />")
+    new_lines = []
+    blockquote = ""
+    for line in lines:
+        if not line:
+            continue
+        if not line.startswith(">"):
+            raise ValueError("Invalid quote block")
+
+        clean = line.lstrip(">").strip()
+        blockquote += clean + " "
+
+    clean_quote = blockquote.strip()
+
+    new_node = TextNode(text=clean_quote, text_type=TextType.TEXT)
+    html_node = text_node_to_html_node(new_node)
+    new_lines.append(html_node)
+
+    return ParentNode(tag="blockquote", children=new_lines)
+
+def paragraph_to_html_node(block):
+    lines = block.split("<br />")
+    paragraph = "".join(lines)
+    children = text_to_children(paragraph)
+    return ParentNode(tag="p", children=children)
+
+def code_to_html_node(block):
+    if not block.startswith("```") or not block.endswith("```<br />"):
+        raise ValueError("Invalid code block")
+    text = block[3:-9]
+    children = text_to_children(text)
+    code = ParentNode(tag="code", children=children)
+    return ParentNode(tag="pre", children=[code])
+
+def heading_to_html_node(block):
+    level = 0
+    for char in block:
+        if char == "#":
+            level += 1
+        else:
+            break
+    if level + 1 >= len(block):
+        raise ValueError(f"Invalid heading level: {level}")
+    text = block[level + 1 :]
+    children = text_to_children(text)
+    return ParentNode(tag=f"h{level}", children=children)
 
 def markdown_to_html_node(markdown):
     blocks = markdown_to_blocks(markdown=markdown)
-    # print(f"BLOCKS DISPLAY:\n{blocks}")
     nodes = []
 
     for block in blocks:
         block_type = block_to_block_type(block)
-        # dc.d_print(f"BLOCK({block_type}):\n{block}", combo=dc.Colour.COMBO_PiB)
 
-        if block_type != block_type_olist and block_type != block_type_ulist:
-            new_nodes = text_to_textnodes(block)
-            new_html_nodes = []
-            for item in new_nodes:
-                new_html_nodes.append(text_node_to_html_node(item))
-            # dc.d_print(f"Non-list items:\n{new_html_nodes}", dc.Colour.COMBO_OB)
-            nodes.extend(new_html_nodes)
+        if (block_type != block_type_olist and block_type != block_type_ulist and 
+            block_type != block_type_quote  and block_type != block_type_code and 
+            block_type != block_type_heading):
+            paragraph_parent = paragraph_to_html_node(block)
+            html_parent = paragraph_parent.to_html()
+            nodes.append(html_parent)
+        elif block_type == block_type_code:
+            code_parent = code_to_html_node(block)
+            html_parent = code_parent.to_html()
+            nodes.append(html_parent)
+        elif block_type == block_type_heading:
+            heading_parent = heading_to_html_node(block)
+            html_parent = heading_parent.to_html()
+            nodes.append(html_parent)
+        elif block_type == block_type_quote:
+            quote_parent = quote_to_html_node_parent(block)
+            html_parent = quote_parent.to_html() + "<br />"
+            nodes.append(html_parent)
         elif block_type == block_type_ulist:
-            # print(f"SPAM: {block}")
             ulist_lines =__strip_ulist(block)
             new_list_nodes = []
             for item in ulist_lines:
                 new_node = text_to_list_item_text_node(item)
-                # new_list_nodes.append(new_node)
                 new_list_nodes.append(text_node_to_html_node(new_node))
-            # dc.d_print(f"ULIST ITEMS: {new_list_nodes}", combo=dc.Colour.COMBO_NOTICEMESENPAI)
 
             # At this point TextNodes are LITEM and not ULIST.  Use ULIST enum to know how to parent.
             parent = ParentNode(children=new_list_nodes, tag=TextType.ULIST.value)
             html_parent = parent.to_html()
-            # print(f"Parent is as follows:\n{html_parent}")
             nodes.append(html_parent)
         elif block_type == block_type_olist:
             olist_lines =__strip_olist(block)
@@ -439,13 +470,12 @@ def markdown_to_html_node(markdown):
             for item in olist_lines:
                 new_node = text_to_list_item_text_node(item)
                 new_list_nodes.append(text_node_to_html_node(new_node))
-            # dc.d_print(f"OLIST ITEMS: {new_list_nodes}", combo=dc.Colour.COMBO_NOTICEMESENPAI)
 
             # At this point TextNodes are LITEM and not OLIST.  Use OLIST enum to know how to parent.
             parent = ParentNode(children=new_list_nodes, tag=TextType.OLIST.value)
             html_parent = parent.to_html()
-            # print(f"Parent is as follows:\n{html_parent}")
             nodes.append(html_parent)
+            
     
     master_parent = ParentNode(children=nodes, tag=TextType.DIV.value)
     return master_parent.to_html()
