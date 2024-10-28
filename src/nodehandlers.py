@@ -231,7 +231,7 @@ def text_node_to_html_node(text_node):
         
     raise ValueError(f"Invalid text type: {text_node.text_type=}")
 
-def text_to_textnodes(text):
+def text_to_textnodes(text: str):
     """Takes a string and converts it to TextNode objects.
 
     Parameters
@@ -254,6 +254,10 @@ def text_to_textnodes(text):
     That is really all this function does.
     """
 
+    if "Disney" in text:
+        dc.d_print(f"TtT: {text}", dc.Colour.COMBO_OB)
+    else:
+        print(f"TtT: {text}")
 
     node_links_split = split_nodes_link([TextNode(text=text, text_type=TextType.TEXT)])
     node_images_split = split_nodes_image(node_links_split)
@@ -372,7 +376,14 @@ def text_to_list_item_text_node(text):
     """Converts a text string to a TextNode with type LITEM.  Regardless of being submitted 
       as either ULIST or OLIST, it will return LITEM TextNodes.  Does not check text.
     """
-    return TextNode(text=text, text_type=TextType.LITEM)
+    content = text_to_textnodes(text)
+    value = ""
+    for item in content:
+        print(f">>>> Item: {item}")
+        value += text_node_to_html_node(item).to_html()
+
+    print(f"FINAL VALUE:\n{value}")
+    return TextNode(text=value, text_type=TextType.LITEM)
 
 def text_to_children(text):
     text_nodes = text_to_textnodes(text)
@@ -459,8 +470,8 @@ def markdown_to_html_node(markdown):
             ulist_lines =__strip_ulist(block)
             new_list_nodes = []
             for item in ulist_lines:
-                new_node = text_to_list_item_text_node(item)
-                new_list_nodes.append(text_node_to_html_node(new_node))
+                tnode = text_to_list_item_text_node(item)                
+                new_list_nodes.append(text_node_to_html_node(tnode))
 
             # At this point TextNodes are LITEM and not ULIST.  Use ULIST enum to know how to parent.
             parent = ParentNode(children=new_list_nodes, tag=TextType.ULIST.value)
@@ -486,9 +497,7 @@ def extract_title(markdown):
     if markdown == None or markdown == "":
         tmp = get_file_contents("index.md")
     else:
-        # print(f"Markdown recieved: {markdown}")
         tmp = markdown
-    # print(f"\n{tmp}")
 
     lines = tmp.split("\n")
 
@@ -500,7 +509,6 @@ def extract_title(markdown):
     raise Exception("No h1 header found.  Bad markdown.")
 
 def strip_title(markdown):
-    # print(markdown)
     lines = markdown.split("\n")
     cleaned_lines = []
 

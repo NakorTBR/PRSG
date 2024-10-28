@@ -17,7 +17,7 @@ from io_handler import get_content_path, get_static_path, get_public_path, get_t
 
 from generator import generate_page
 
-from io_handler import get_file_contents
+# from io_handler import get_file_contents
 
 class TestMarkdownToBlocks(unittest.TestCase):
     def test_markdown_to_blocks(self):
