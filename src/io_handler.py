@@ -4,6 +4,7 @@ import shutil
 
 __public_path = Path().cwd() / "public/"
 __static_path = Path().cwd() / "static/"
+__content_path = Path().cwd() / "content/"
 
 def check_read_write_dirs() -> bool:
     """Checks the public and static directories to ensure they are present.
@@ -80,3 +81,14 @@ def push_public(files=None, path=None):
             else:
                 print("Folder already exists.")
             push_public(get_all_files_for_given_path(new_path), new_folder)
+
+def get_file_contents(file_name: str) -> str:
+    file_path = __content_path / file_name
+    contents = ""
+
+    try:
+        contents = file_path.read_text()
+    except FileNotFoundError:
+        print("No such thing.")
+
+    return contents

@@ -4,6 +4,7 @@ from nodehandlers import (
     markdown_to_blocks,
     markdown_to_html_node,
     block_to_block_type,
+    extract_title,
     block_type_heading,
     block_type_code,
     block_type_paragraph,
@@ -11,6 +12,8 @@ from nodehandlers import (
     block_type_olist,
     block_type_ulist,
 )
+
+from io_handler import get_file_contents
 
 class TestMarkdownToBlocks(unittest.TestCase):
     def test_markdown_to_blocks(self):
@@ -168,6 +171,21 @@ this is paragraph text
             node,
             "<div><pre><code><br />This is a code block<br /></code></pre><p>this is paragraph text</p></div>",
         )
+
+    def test_etract_title(self):
+        # result = extract_title(get_file_contents("index.md"))
+        result = extract_title("# Title here")
+        self.assertEqual(result, "Title here")
+
+        result = extract_title("#       It's still a title")
+        self.assertEqual(result, "It's still a title")
+
+        result = extract_title("# <><>Title h_ere")
+        self.assertEqual(result, "<><>Title h_ere")
+
+        result = extract_title("# Who shot first?\nYou did.  Stop trying to blame Han.\nJerk.")
+        self.assertEqual(result, "Who shot first?")
+
 
 if __name__ == "__main__":
     unittest.main()

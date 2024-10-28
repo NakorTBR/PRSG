@@ -3,6 +3,8 @@ import re
 from htmlnode import LeafNode, ParentNode
 from print_colours import debug_colours as dc
 
+from io_handler import get_file_contents
+
 
 block_type_paragraph = "paragraph"
 block_type_quote = "blockquote"
@@ -479,6 +481,23 @@ def markdown_to_html_node(markdown):
     
     master_parent = ParentNode(children=nodes, tag=TextType.DIV.value)
     return master_parent.to_html()
+
+def extract_title(markdown):
+    if markdown == None or markdown == "":
+        tmp = get_file_contents("index.md")
+    else:
+        # print(f"Markdown recieved: {markdown}")
+        tmp = markdown
+    # print(f"\n{tmp}")
+
+    lines = tmp.split("\n")
+
+    for line in lines:
+        if line.startswith("# "):
+            retval = line.lstrip("# ")
+            return retval.strip()
+    
+    raise Exception("No h1 header found.  Bad markdown.")
 
 
 
