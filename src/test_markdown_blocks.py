@@ -15,7 +15,7 @@ from nodehandlers import (
 
 from io_handler import get_content_path, get_static_path, get_public_path, get_template_path
 
-from generator import generate_page
+from generator import generate_page, generate_pages_recursive
 
 # from io_handler import get_file_contents
 
@@ -194,6 +194,8 @@ this is paragraph text
         content = get_content_path() / "index.md"
         dest = get_static_path() / "index.html"
         generate_page(from_path=content, dest_path=dest, template_path=get_template_path())
+
+        generate_pages_recursive()
 
 if __name__ == "__main__":
     unittest.main()

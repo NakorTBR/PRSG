@@ -254,11 +254,6 @@ def text_to_textnodes(text: str):
     That is really all this function does.
     """
 
-    if "Disney" in text:
-        dc.d_print(f"TtT: {text}", dc.Colour.COMBO_OB)
-    else:
-        print(f"TtT: {text}")
-
     node_links_split = split_nodes_link([TextNode(text=text, text_type=TextType.TEXT)])
     node_images_split = split_nodes_image(node_links_split)
     node_bold_split = split_nodes_delimiter(node_images_split, "**", TextType.BOLD)
@@ -379,10 +374,8 @@ def text_to_list_item_text_node(text):
     content = text_to_textnodes(text)
     value = ""
     for item in content:
-        print(f">>>> Item: {item}")
         value += text_node_to_html_node(item).to_html()
 
-    print(f"FINAL VALUE:\n{value}")
     return TextNode(text=value, text_type=TextType.LITEM)
 
 def text_to_children(text):

@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import shutil
+from file_object import FileObject
 
 __public_path = Path().cwd() / "public/"
 def get_public_path():
@@ -34,6 +35,46 @@ def check_read_directories() -> bool:
     
     return True
 
+def read_all_content_files(files=None, path=None, retval=None) -> list[FileObject]:
+    if not files:
+        files = __get_all_content_files()
+
+    if not path:
+        path = __content_path
+
+    # files = __get_all_content_files()
+    if not retval:
+        retval = []
+
+    print("\nReading all content files\n")
+    
+    for file_path in files:
+        if os.path.isfile(file_path):
+            print(f"FILE: {file_path}")
+            file_content = get_file_contents(file_path)
+            retval.append(FileObject(file_content, file_path))
+            # print(retval)
+        else:
+            new_path = Path(file_path)
+            new_folder = path / file_path.stem
+
+            dest_folder_string = f"{new_folder}"
+            dest_folder_string = dest_folder_string.replace("/content", "/static")
+            print(f"DEST FOLDER: {dest_folder_string}")
+            new_folder = Path(dest_folder_string)
+
+            if not os.path.exists(new_folder):
+                print(f"Creating dir: {new_folder}")
+                os.mkdir(new_folder)
+            else:
+                print(f"Folder already exists ({new_folder}).")
+            read_all_content_files(files=get_all_files_for_given_path(new_path), path=new_folder, retval=retval)
+            # push_public(get_all_files_for_given_path(new_path), new_folder)
+    
+    return retval
+
+def __get_all_content_files() -> list:
+    return list(__content_path.iterdir())
 
 def __get_all_static_files() -> list:
     return list(__static_path.iterdir())
@@ -59,7 +100,9 @@ def push_public(files=None, path=None):
     
     for file in files:
         if os.path.isfile(file):
-            # TODO: Copy files
+            if file.suffix == ".md":
+                continue
+            
             dest = path / file.name
             try:
                 shutil.copy(file, dest)
